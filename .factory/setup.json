@@ -1,0 +1,9 @@
+{
+  "install": "composer install --no-interaction --prefer-dist && { [ -f .env ] || { cp .env.example .env && php artisan key:generate; }; } && touch database/database.sqlite && php artisan migrate --force --seed && npm ci && npm run build",
+  "dev": "php artisan serve --host=127.0.0.1 --port=$PORT",
+  "checks": {
+    "pint": "vendor/bin/pint --test",
+    "phpstan": "vendor/bin/phpstan analyse --no-progress --memory-limit=1G",
+    "pest": "vendor/bin/pest"
+  }
+}

@@ -26,9 +26,6 @@ it('meldet den Benutzer aus dem Seeder an und zeigt /admin', function () {
         ->assertHasNoFormErrors();
 
     $this->assertAuthenticatedAs(User::where('email', 'admin@example.test')->firstOrFail());
-
-    // Filament lässt Benutzer ohne FilamentUser-Vertrag nur bei config('app.env') === 'local' ins Panel.
-    config(['app.env' => 'local']);
     $this->get('/admin')->assertOk();
 });
 
@@ -57,4 +54,12 @@ it('legt in production keinen Benutzer an', function () {
     $this->artisan('db:seed', ['--class' => DatabaseSeeder::class, '--force' => true])->assertSuccessful();
 
     expect(User::count())->toBe(0);
+});
+
+it('verweigert in production den Zugang zum Panel', function () {
+    app()->detectEnvironment(fn () => 'production');
+
+    $this->actingAs(User::factory()->create())
+        ->get('/admin')
+        ->assertForbidden();
 });

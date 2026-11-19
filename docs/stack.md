@@ -4,7 +4,7 @@ Verbindliche Beschreibung des Stacks und der Konventionen. Wer in diesem Projekt
 
 ## Stack
 
-- Sprache und Laufzeit: PHP 8.5 (`composer.json` verlangt `^8.3`)
+- Sprache und Laufzeit: PHP 8.5 (`composer.json` verlangt `^8.5`)
 - Framework: Laravel 13
 - Oberfläche: Filament 5 (Admin-Panel unter `/admin`) mit Livewire 4
 - Datenhaltung: SQLite (`database/database.sqlite`), Migrationen mit `php artisan migrate`

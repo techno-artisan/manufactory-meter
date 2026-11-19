@@ -1,5 +1,10 @@
-# Feature-Index
+# Features
 
-Jedes Feature hat einen eigenen Ordner `features/<ordner>/` mit der Spezifikation in `features/<ordner>/spec.md`. Dieser Index führt die Features auf.
+Jedes Feature hat einen eigenen Ordner `features/<ordner>/` mit der Spezifikation in `spec.md`.
 
-(noch keine Features)
+Nächste freie ID: PROJ-1
+
+| ID | Feature | Status | Ordner |
+|----|---------|--------|--------|
+
+**Bau-Reihenfolge:** noch keine

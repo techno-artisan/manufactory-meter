@@ -71,7 +71,7 @@ COPY <<'EOF' /factory/workflows/starter-kit/stacks/laravel.md
 
 Gilt, wenn `docs/stack.md` unter „Stack-Packs“ `laravel` nennt.
 
-**Verbote:** keine neuen Abhängigkeiten, keine Änderung an Anmeldung und Berechtigungen, an `.factory/`, an Prüfdefinitionen und an den Konfigurationen von Pint, PHPStan und Pest ohne ausdrücklichen Auftrag in der Spec; keine echten externen Dienste.
+**Verbote:** keine neuen Abhängigkeiten, keine Änderung an Anmeldung und Berechtigungen, an `.factory/`, an `docs/stack.md` (auch nicht löschen), an Prüfdefinitionen und an den Konfigurationen von Pint, PHPStan und Pest ohne ausdrücklichen Auftrag in der Spec; keine echten externen Dienste.
 
 ## Struktur
 - **Vorrang hat das Projekt.** Vor der ersten neuen Datei lesen: `docs/stack.md`, `composer.json` (`autoload` mit Namespaces, eingebundene Pakete und Module), `phpstan.neon` (`paths`) und vorhandenen Code derselben Art. Neue Dateien dorthin, wo gleichartige schon liegen, mit dem Namespace aus `composer.json`

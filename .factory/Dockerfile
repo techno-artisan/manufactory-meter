@@ -74,15 +74,15 @@ Gilt, wenn `docs/stack.md` unter „Stack-Packs“ `laravel` nennt.
 **Verbote:** keine neuen Abhängigkeiten, keine Änderung an Anmeldung und Berechtigungen, an `.factory/`, an Prüfdefinitionen und an den Konfigurationen von Pint, PHPStan und Pest ohne ausdrücklichen Auftrag in der Spec; keine echten externen Dienste.
 
 ## Struktur
-- Modelle in `app/Models/`, Migrationen in `database/migrations/`, Factories in `database/factories/`, Seeder in `database/seeders/`
-- Filament-Ressourcen in `app/Filament/Resources/`, Seiten in `app/Filament/Pages/`, Widgets in `app/Filament/Widgets/`: Das Panel `admin` (`/admin`, `app/Providers/Filament/AdminPanelProvider.php`) entdeckt sie dort selbst, ohne Eintrag
-- Livewire-Komponenten als Klasse in `app/Livewire/` (`php artisan make:livewire <Name> --class`), nicht als Single-File-Komponente: PHPStan prüft nur `app`, `database` und `routes`
-- Tests in `tests/Feature/` (HTTP, Livewire, Datenbank) und `tests/Unit/` (ohne Framework-Start)
-- Neue Klassen mit `php artisan make:*` erzeugen, nicht von Hand anlegen
+- **Vorrang hat das Projekt.** Vor der ersten neuen Datei lesen: `docs/stack.md`, `composer.json` (`autoload` mit Namespaces, eingebundene Pakete und Module), `phpstan.neon` (`paths`) und vorhandenen Code derselben Art. Neue Dateien dorthin, wo gleichartige schon liegen, mit dem Namespace aus `composer.json`
+- Projektbezogenes steht in `docs/stack.md`: Ablage, Panels, Test-Login und Vorbilder für Tests
+- Nur wenn das Projekt nichts anderes zeigt, gilt der Laravel-Standard: Modelle in `app/Models/`, Migrationen in `database/migrations/`, Factories in `database/factories/`, Seeder in `database/seeders/`, Filament-Ressourcen, -Seiten und -Widgets in `app/Filament/Resources/`, `Pages/`, `Widgets/`, Livewire-Komponenten in `app/Livewire/`, Tests in `tests/Feature/` (HTTP, Livewire, Datenbank) und `tests/Unit/` (ohne Framework-Start)
+- `php artisan make:*` nur, wo das Ziel diesem Standard entspricht; sonst eine vorhandene Nachbardatei als Vorbild nehmen. Filament findet Ressourcen, Seiten und Widgets nur in den Ordnern, die der Panel-Provider entdeckt (`discover…`), sonst braucht es dort einen Eintrag
+- Livewire-Komponenten als Klasse (`php artisan make:livewire <Name> --class`), nicht als Single-File-Komponente: PHPStan prüft nur PHP-Dateien in den `paths` aus `phpstan.neon`
 - Features stehen unter `features/<ordner>/spec.md`, die Übersicht in `features/INDEX.md`
 
 ## Oberfläche
-- Verwaltungsoberflächen **immer mit Filament**: `php artisan make:filament-resource <Model> --no-interaction` statt eigener Controller und Blade-Seiten
+- Verwaltungsoberflächen **immer mit Filament**: `php artisan make:filament-resource <Model> --no-interaction` statt eigener Controller und Blade-Seiten (Ablage siehe Struktur)
 - Filament 5: Formulare in `form(Schema $schema)`, Tabellen in `table(Table $table)`. Felder aus `Filament\Forms\Components`, Layout aus `Filament\Schemas\Components`, Spalten aus `Filament\Tables\Columns`, alle Aktionen aus `Filament\Actions`. Namespaces aus Filament 3 und 4 nicht aus dem Gedächtnis übernehmen, sondern unter `vendor/filament/` nachlesen
 - Livewire 4 nur, wo Filament nicht reicht. Der Zustand liegt auf dem Server, öffentliche Eigenschaften sind für den Browser sichtbar und änderbar: keine Geheimnisse und keine ganzen Modelle darin
 - Livewire- und Filament-Aktionen prüfen Berechtigung und Eingabe selbst, nicht nur die Oberfläche
@@ -103,18 +103,17 @@ Gilt, wenn `docs/stack.md` unter „Stack-Packs“ `laravel` nennt.
 - Geheimnisse nie im Code und nicht in Git; Konfiguration über `.env` und `config/`
 
 ## Tests
-- Pest: Tests als `it('…', function () { … })` mit deutscher Beschreibung, Vorbild `tests/Feature/AdminPanelTest.php`
-- Datenbank in Tests ist SQLite im Speicher (`phpunit.xml`); `RefreshDatabase` je Testdatei mit `uses(RefreshDatabase::class)` einbinden
+- Pest: Tests als `it('…', function () { … })` mit deutscher Beschreibung; Vorbild sind vorhandene Tests des Projekts (`docs/stack.md`)
+- Die Testdatenbank steht in `phpunit.xml`; `RefreshDatabase` je Testdatei mit `uses(RefreshDatabase::class)` einbinden
 - Filament und Livewire testen mit `Livewire::test(<Seite>::class)`, etwa `fillForm`, `call`, `assertHasFormErrors`, `assertCanSeeTableRecords`
 - Jedes neue Verhalten bekommt einen Test; ein Fehler bekommt zuerst einen Test, der ihn zeigt
 - Tests rufen keine externen Dienste auf
-- Test-Login für das Panel: `admin@example.test` mit Passwort `password` (`database/seeders/TestLoginSeeder.php`; `DatabaseSeeder` ruft ihn nur in `local` und `testing` auf). Die Abnahme meldet sich damit am Panel unter `/admin` an, über `http://127.0.0.1:$PORT`
-- Der Zugang zum Panel (`canAccessPanel()` in `app/Models/User.php`) gilt nur in `local` und `testing`: Gelingt die Anmeldung nicht, zuerst `APP_ENV` prüfen, nicht die Regel ändern
+- Test-Login für die Abnahme: `admin@example.test` mit Passwort `password`, nur in `local` und `testing`. Seeder, Panel und Adresse nennt `docs/stack.md`; die Abnahme läuft über `http://127.0.0.1:$PORT`
+- Gelingt die Anmeldung nicht, zuerst `APP_ENV` prüfen, nicht die Zugangsregel des Panels ändern
 
-## Befehle (Standard, siehe `.factory/setup.json`)
-- install `composer install --no-interaction --prefer-dist && { [ -f .env ] || { cp .env.example .env && php artisan key:generate; }; } && touch database/database.sqlite && php artisan migrate --force --seed && npm ci && npm run build`
-- dev `php artisan serve --host=127.0.0.1 --port=$PORT`
-- checks: `vendor/bin/pint --test`, `vendor/bin/phpstan analyse --no-progress --memory-limit=1G`, `vendor/bin/pest`
+## Befehle
+- Maßgeblich sind `install`, `dev` und `checks` in `.factory/setup.json`
+- `dev` lauscht auf `127.0.0.1:$PORT`, nicht auf `0.0.0.0`
 - Formatieren mit `vendor/bin/pint` (ohne `--test`); die Checks nacheinander ausführen, nicht parallel
 EOF
 

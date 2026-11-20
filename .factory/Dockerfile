@@ -33,8 +33,8 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 
 # PHP aus dem Quellarchiv. Schalter nur für Erweiterungen der Liste, die PHP nicht
-# von selbst baut: openssl, mbstring, intl, zip. CGI und phpdbg braucht niemand;
-# ohne sie ist der Bau kürzer.
+# von selbst baut: openssl, mbstring, intl, zip, zlib (zlib braucht der Phar von
+# Pint). CGI und phpdbg braucht niemand; ohne sie ist der Bau kürzer.
 RUN set -eux; \
     cd /tmp; \
     curl -fsSL -o php.tar.xz "https://www.php.net/distributions/php-${PHP_VERSION}.tar.xz"; \
@@ -50,7 +50,8 @@ RUN set -eux; \
       --with-openssl \
       --enable-mbstring \
       --enable-intl \
-      --with-zip; \
+      --with-zip \
+      --with-zlib; \
     make -j"$(nproc)"; \
     make install; \
     cd /; \
@@ -125,7 +126,7 @@ RUN set -eux; \
     php -m; \
     for ext in ctype date dom fileinfo filter hash iconv intl json libxml mbstring \
                openssl pcre phar reflection session simplexml tokenizer xml \
-               xmlreader xmlwriter zip pdo_sqlite; do \
+               xmlreader xmlwriter zip zlib pdo_sqlite; do \
       php -m | grep -qix "$ext" || { echo "Erweiterung fehlt: $ext" >&2; exit 1; }; \
     done; \
     HOME=/root composer --version; \

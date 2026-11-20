@@ -20,6 +20,17 @@ Verbindliche Beschreibung des Stacks und der Konventionen. Wer in diesem Projekt
 
 - `laravel`
 
+## Aufbau
+
+Das Stack-Pack verweist für alles Projektbezogene hierher.
+
+- Ablage: Laravel-Standard. Namespace `App\` in `app/`, dazu `Database\Factories\` und `Database\Seeders\` (`composer.json`, `autoload`); keine Module und keine eigenen Pakete
+- Panel: `admin` unter `/admin`, Provider `app/Providers/Filament/AdminPanelProvider.php`; er entdeckt Ressourcen, Seiten und Widgets in `app/Filament/Resources/`, `Pages/` und `Widgets/` selbst, ohne Eintrag
+- PHPStan prüft `app`, `database` und `routes` (`phpstan.neon`)
+- Tests: Vorbild `tests/Feature/AdminPanelTest.php`; Testdatenbank ist SQLite im Speicher (`phpunit.xml`)
+- Test-Login: `admin@example.test`, Passwort `password`, angelegt von `database/seeders/TestLoginSeeder.php`; `DatabaseSeeder` ruft ihn nur in `local` und `testing` auf. Anmeldung unter `http://127.0.0.1:$PORT/admin`
+- Zugang zum Panel: `canAccessPanel()` in `app/Models/User.php` erlaubt ihn nur in `local` und `testing`
+
 ## Konventionen
 
 Die Regeln des Stack-Packs `laravel` gelten verbindlich. Darüber hinaus:

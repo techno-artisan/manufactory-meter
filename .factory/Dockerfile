@@ -1,5 +1,6 @@
 # Job-Image für Laravel-Projekte: erweitert das Job-Image des Upstream um PHP und
-# Composer in fester Version, geprüft per SHA-256.
+# Composer in fester Version, geprüft per SHA-256. Eine Abnahme-Regel (ADR-0021) ersetzt in der
+# Kopie des Playbooks die Abnahme im Browser durch eine Fallunterscheidung nach der Oberfläche.
 #
 # Diese Datei ist die einzige Quelle des Laravel-Job-Image. Sie liegt byte-gleich
 # als .factory/Dockerfile im Pilot-Repository; Änderungen nur hier und dann dorthin
@@ -117,6 +118,54 @@ Gilt, wenn `docs/stack.md` unter „Stack-Packs“ `laravel` nennt.
 - Formatieren mit `vendor/bin/pint` (ohne `--test`); die Checks nacheinander ausführen, nicht parallel
 EOF
 
+# Abnahme-Regel, ADR-0021: ersetzt in der Kopie des Playbooks die Abnahme-Schritte 3 und 4;
+# scheitert, wenn der alte Wortlaut fehlt. Das Skript steht als COPY-Heredoc hier; der lokale
+# Test job-images/laravel/test-playbook-rule.sh schneidet es heraus und prüft genau diesen Text.
+# Der Block endet nur an PLAYBOOK_RULE; die inneren Marken ALT und NEU heißen anders.
+COPY <<'PLAYBOOK_RULE' /tmp/playbook-rule.sh
+#!/bin/bash
+# Abnahme-Regel (ADR-0021): ersetzt in der Kopie des Playbooks die Schritte 3 und 4 der Abnahme.
+# Aufruf: bash playbook-rule.sh <datei>. Scheitert mit Exit 1, wenn der alte Wortlaut fehlt (Upstream hat das Playbook
+# geändert); die Datei bleibt dann unverändert. Lokaler Test: job-images/laravel/test-playbook-rule.sh.
+set -euo pipefail
+
+file=${1:?Aufruf: playbook-rule.sh <datei>}
+
+alt=$(cat <<'ALT'
+3. Starte die App (`.factory/setup.json` → `dev`) auf einem freien Port und teste **jedes Szenario selbst im Browser** (Playwright-Skript mit Node, Chromium ist installiert). Halte wichtige Zustände mit `factory-screenshot` fest.
+4. Prüfe zusätzlich kurz auf Offensichtliches: Konsolenfehler, kaputte Darstellung auf 375px, Eingaben, die die App zum Absturz bringen.
+ALT
+)
+
+neu=$(cat <<'NEU'
+3. Entscheide zuerst, ob der Auftrag eine Oberfläche betrifft: Enthält er eine Oberfläche oder ändert er etwas, das in einer Oberfläche sichtbar ist (Filament-Ressource, Seite, Widget, Livewire-Komponente, Blade-Ansicht, Ausgabe im Panel)? Im Zweifel gilt: ja. Der Abnahmebericht nennt, welcher Fall vorlag und warum.
+   - **Mit Oberfläche:** Starte die App (`.factory/setup.json` → `dev`) auf einem freien Port und teste **jedes Szenario selbst im Browser** (Playwright-Skript mit Node, Chromium ist installiert). Halte wichtige Zustände mit `factory-screenshot` fest.
+   - **Ohne Oberfläche:** Teste **jedes Szenario selbst per Aufruf** (Artisan-Befehl, Pest, HTTP-Anfrage), ohne Browser. Der Abnahmebericht nennt je Szenario den Aufruf und die beobachtete Ausgabe. Screenshots entfallen in diesem Fall.
+4. Prüfe zusätzlich kurz auf Offensichtliches: in beiden Fällen Eingaben, die die App zum Absturz bringen; mit Oberfläche außerdem Konsolenfehler und kaputte Darstellung auf 375px.
+NEU
+)
+
+mapfile -t alt_zeilen <<< "$alt"
+mapfile -t nr3 < <(grep -n -x -F -- "${alt_zeilen[0]}" "$file" | cut -d: -f1)
+mapfile -t nr4 < <(grep -n -x -F -- "${alt_zeilen[1]}" "$file" | cut -d: -f1)
+
+if (( ${#nr3[@]} != 1 || ${#nr4[@]} != 1 || nr4[0] != nr3[0] + 1 )); then
+    echo "Abnahme-Regel: alter Wortlaut der Schritte 3 und 4 fehlt in $file" >&2
+    exit 1
+fi
+
+tmp=$(mktemp)
+trap 'rm -f -- "$tmp"' EXIT
+{
+    head -n $((nr3[0] - 1)) -- "$file"
+    printf '%s\n' "$neu"
+    tail -n +$((nr4[0] + 1)) -- "$file"
+} > "$tmp"
+cat -- "$tmp" > "$file"
+PLAYBOOK_RULE
+
+RUN bash /tmp/playbook-rule.sh /factory/playbook.md && rm /tmp/playbook-rule.sh
+
 # Prüfung als letzter RUN-Schritt: scheitert eine Zeile, scheitert der Bau.
 # HOME=/root, damit Composer als root nichts unter /home/pwuser anlegt.
 RUN set -eux; \
@@ -130,6 +179,8 @@ RUN set -eux; \
     done; \
     HOME=/root composer --version; \
     HOME=/root composer --version | grep -qF "Composer version ${COMPOSER_VERSION} "; \
-    test -r /factory/workflows/starter-kit/stacks/laravel.md
+    test -r /factory/workflows/starter-kit/stacks/laravel.md; \
+    grep -qF -- '- **Ohne Oberfläche:**' /factory/playbook.md; \
+    test -r /factory/playbook.md
 
 USER pwuser

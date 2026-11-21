@@ -166,6 +166,18 @@ PLAYBOOK_RULE
 
 RUN bash /tmp/playbook-rule.sh /factory/playbook.md && rm /tmp/playbook-rule.sh
 
+# Messdaten (V-004): Claude Code im Job sendet Tokens und Kosten je Aufruf an den Collector des
+# Factory-Hosts, Eingang jobs an docker0. Ein Job erhält eigene Variablen nur über ENV in dieser
+# Datei. Wortlaut und Begründung der Werte: host/token-capture/README.md. Der Block steht hinter
+# dem Bau von PHP, damit dessen Ebenen im Cache bleiben.
+ENV CLAUDE_CODE_ENABLE_TELEMETRY=1 \
+    OTEL_LOGS_EXPORTER=otlp \
+    OTEL_METRICS_EXPORTER=otlp \
+    OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf \
+    OTEL_EXPORTER_OTLP_ENDPOINT=http://172.17.0.1:4318 \
+    OTEL_LOGS_EXPORT_INTERVAL=1000 \
+    OTEL_RESOURCE_ATTRIBUTES=manufactory.project=manufactory-meter
+
 # Prüfung als letzter RUN-Schritt: scheitert eine Zeile, scheitert der Bau.
 # HOME=/root, damit Composer als root nichts unter /home/pwuser anlegt.
 RUN set -eux; \
@@ -181,6 +193,8 @@ RUN set -eux; \
     HOME=/root composer --version | grep -qF "Composer version ${COMPOSER_VERSION} "; \
     test -r /factory/workflows/starter-kit/stacks/laravel.md; \
     grep -qF -- '- **Ohne Oberfläche:**' /factory/playbook.md; \
-    test -r /factory/playbook.md
+    test -r /factory/playbook.md; \
+    test "${CLAUDE_CODE_ENABLE_TELEMETRY}" = 1; \
+    test "${OTEL_EXPORTER_OTLP_ENDPOINT}" = http://172.17.0.1:4318
 
 USER pwuser

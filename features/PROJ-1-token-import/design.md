@@ -51,3 +51,11 @@ Ja, weil die Aufrufe dauerhaft in der Datenbank gespeichert werden (Tabelle + Ko
 - **Duplikaterkennung per eindeutigem Index in der Datenbank** | **Alternative:** vorher nachschauen, ob der Abdruck existiert | **Abwägung:** Nachschauen ist bei gleichzeitigen Imports nicht sicher und langsamer; der Index ist sicher und schnell (2026-11-21)
 - **Paketweises Speichern** | **Alternative:** jeden Aufruf einzeln speichern | **Abwägung:** einzeln wäre bei 100.000 Zeilen deutlich langsamer; ein abgebrochenes Paket wird beim nächsten Import ergänzt (2026-11-21)
 - **Schlüssel sortieren vor dem Fingerabdruck** | **Alternative:** Abdruck über den Rohtext der Zeile | **Abwägung:** Eine Zeile enthält mehrere Einträge, und Leerzeichen/Schlüsselreihenfolge sind für den Inhalt bedeutungslos (2026-11-21)
+
+## Umsetzung
+- Tabelle `api_requests` (Migration) mit eindeutigem Fingerabdruck, Modell `ApiRequest` (Original-Eintrag wird beim Abfragen als Struktur zurückgegeben).
+- Zerleger für eine Zeile (`app/Support/TokenImport/OtlpLineParser.php`) liefert gefundene Aufrufe und Gründe für kaputte Stellen; der Befehl `tokens:import` (`app/Console/Commands/ImportTokens.php`) liest zeilenweise, speichert in Paketen zu 500 und gibt die Zusammenfassung aus.
+- Fehlen mehrere Werte oder sind mehrere ungültig, nennt die Meldung alle (z. B. `Zeile 5: Pflichtwert fehlt: model; ungültiger Wert: input_tokens`). Bei mehreren Einträgen in einer Zeile steht zusätzlich „(Eintrag n)“ dabei.
+- Kosten und Dauer werden ebenfalls geprüft: negativ oder keine Zahl gilt als „ungültiger Wert“. Eine Dauer mit Nachkommastellen wird auf ganze ms gerundet.
+- Gemessen: 100.000 Zeilen in ca. 12 s (erneuter Import ca. 8 s) bei 128 MB Speichergrenze; zwei gleichzeitige Imports ergeben genau 100.000 Aufrufe.
+- Keine Abweichung vom Plan.

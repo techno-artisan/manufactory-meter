@@ -6,6 +6,6 @@ Nächste freie ID: PROJ-2
 
 | ID | Feature | Status | Ordner |
 |----|---------|--------|--------|
-| PROJ-1 | Import von API-Aufrufen aus OTLP-JSON-Dateien | Architected | features/PROJ-1-token-import/ |
+| PROJ-1 | Import von API-Aufrufen aus OTLP-JSON-Dateien | In Progress | features/PROJ-1-token-import/ |
 
 **Bau-Reihenfolge:** noch keine

@@ -10,6 +10,6 @@ Nächste freie ID: PROJ-6
 | PROJ-2 | Liste der API-Aufrufe im Admin-Panel | Approved | features/PROJ-2-api-aufrufe-liste/ |
 | PROJ-3 | Daily Usage Overview | Approved | features/PROJ-3-daily-usage-overview/ |
 | PROJ-4 | Auswertung nach Session | Approved | features/PROJ-4-session-auswertung/ |
-| PROJ-5 | CSV-Export der API-Aufrufe | In Progress | features/PROJ-5-csv-export/ |
+| PROJ-5 | CSV-Export der API-Aufrufe | Approved | features/PROJ-5-csv-export/ |
 
 **Bau-Reihenfolge:** noch keine

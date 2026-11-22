@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Filament\Resources\ApiRequests\Tables;
 
 use App\Models\ApiRequest;
@@ -21,7 +23,7 @@ class ApiRequestsTable
     /**
      * Format, in dem der Import die Zeitpunkte (UTC) speichert.
      */
-    private const STORED_FORMAT = 'Y-m-d H:i:s';
+    private const string STORED_FORMAT = 'Y-m-d H:i:s';
 
     public static function configure(Table $table): Table
     {

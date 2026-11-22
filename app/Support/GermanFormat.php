@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Support;
 
 use Carbon\CarbonImmutable;
@@ -12,9 +14,9 @@ use DateTimeInterface;
  */
 final class GermanFormat
 {
-    public const MISSING = '–';
+    public const string MISSING = '–';
 
-    public const TIMEZONE = 'Europe/Berlin';
+    public const string TIMEZONE = 'Europe/Berlin';
 
     public static function integer(int|string|null $value): string
     {

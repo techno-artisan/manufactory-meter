@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 use App\Filament\Resources\ApiRequests\ApiRequestResource;
 use App\Filament\Resources\ApiRequests\Pages\ListApiRequests;
 use App\Filament\Resources\ApiRequests\Pages\ViewApiRequest;

@@ -46,3 +46,11 @@ Ja, aber nur lesend: ein Konsolenbefehl liest die gespeicherten Aufrufe und schr
 - **Eine sortierte Abfrage mit Cursor** | **Alternative:** in Paketen nach ID blättern | **Abwägung:** Blättern nach ID passt nicht zur Sortierung nach Zeitpunkt und könnte bei parallelem Import Zeilen doppelt oder gar nicht liefern; der Cursor hält immer nur eine Zeile im Speicher (2026-11-22)
 - **Temporäre Datei im selben Ordner + Umbenennen** | **Alternative:** direkt in den Pfad schreiben | **Abwägung:** Umbenennen im selben Ordner ist ein einziger Schritt; es bleibt nie eine halbe Datei am Pfad stehen (2026-11-22)
 - **Kosten aus der kürzesten exakten Darstellung** | **Alternative:** feste 10 Nachkommastellen (`decimal:10`) | **Abwägung:** feste Stellen erzeugen bei großen Beträgen erfundene Ziffern hinter der Gleitkomma-Genauigkeit; die kürzeste Darstellung gibt genau den gespeicherten Wert wieder (2026-11-22)
+
+## Umsetzung
+- Befehl `app/Console/Commands/ExportTokens.php` (`tokens:export`). Er prüft zuerst alle Angaben und die Zieldatei, liest dann die 12 Spalten mit einer einzigen sortierten Abfrage per Cursor und schreibt Zeile für Zeile in eine temporäre Datei `.tokens-export-…` im Zielordner, die am Ende auf den Pfad umbenannt wird. Bei einem Fehler wird die temporäre Datei gelöscht.
+- Zellen- und Zeilenformat in `app/Support/TokenExport/CsvFormat.php` (Kosten, ganze Zahlen, Zeitpunkt, Textwerte mit Formel-Schutz, RFC-4180-Quoting). Die Anzeigeformate des Panels (`GermanFormat`) bleiben unverändert.
+- Zeitraumfilter mit derselben Regel wie die Liste aus PROJ-2 (deutscher Tag → UTC-Bereich, obere Grenze exklusiv).
+- `--model` mehrfach wird zu einer Liste ohne Doppelte zusammengefasst; leere oder nur aus Leerzeichen bestehende Werte von `--model`/`--session` brechen ab. `--session` ohne Wert gilt ebenfalls als leer.
+- Gemessen: 100.000 Aufrufe in einer SQLite-Datei, `memory_limit=128M`: 1,6 s, Datei mit 100.001 Zeilen.
+- Abweichung vom Plan: keine. Ohne die PHP-Erweiterung `pcntl` kann der Befehl Strg+C nicht abfangen; dann bleibt die temporäre Datei `.tokens-export-…` im Zielordner liegen. Am Pfad selbst liegt nie eine halbe Datei, eine vorhandene Datei bleibt unverändert (EC-2).

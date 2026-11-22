@@ -8,6 +8,6 @@ Nächste freie ID: PROJ-4
 |----|---------|--------|--------|
 | PROJ-1 | Import von API-Aufrufen aus OTLP-JSON-Dateien | Approved | features/PROJ-1-token-import/ |
 | PROJ-2 | Liste der API-Aufrufe im Admin-Panel | Approved | features/PROJ-2-api-aufrufe-liste/ |
-| PROJ-3 | Daily Usage Overview | In Progress | features/PROJ-3-daily-usage-overview/ |
+| PROJ-3 | Daily Usage Overview | Approved | features/PROJ-3-daily-usage-overview/ |
 
 **Bau-Reihenfolge:** noch keine

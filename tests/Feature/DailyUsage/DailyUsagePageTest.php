@@ -462,3 +462,30 @@ it('zeigt einen sehr langen Modellnamen vollständig (EC-4)', function () {
 
     usagePage()->assertSee($model);
 });
+
+it('gibt Modellnamen maskiert aus und baut den Link sicher (Sicherheit)', function () {
+    storeUsage('2026-11-21 10:00:00', ['model' => '<script>alert(1)</script>&x=1']);
+
+    $component = usagePage()
+        ->assertDontSeeHtml('<script>alert(1)</script>')
+        ->assertSeeHtml('&lt;script&gt;alert(1)&lt;/script&gt;');
+
+    $url = rowsOfKind($component, 'model')[0]['url'];
+    parse_str((string) parse_url($url, PHP_URL_QUERY), $query);
+
+    expect($url)->toStartWith(url('/admin/api-aufrufe'))
+        ->and($query['filters']['model']['values'])->toBe(['<script>alert(1)</script>&x=1']);
+});
+
+it('stürzt bei manipulierten Filterwerten nicht ab (Sicherheit)', function (array $filters) {
+    storeUsage('2026-11-21 10:00:00');
+
+    usagePage()
+        ->set('tableFilters', $filters)
+        ->assertOk()
+        ->assertSee('Tagesübersicht');
+})->with([
+    'kein Datum' => [['period' => ['from' => 'kein-datum', 'until' => "'; drop table api_requests; --"]]],
+    'Modelle als Text' => [['model' => ['values' => "' or 1=1 --"]]],
+    'verschachtelte Werte' => [['period' => ['from' => ['x']], 'show_empty_days' => ['isActive' => 'ja']]],
+]);

@@ -61,11 +61,11 @@ class SessionUsage extends Page implements HasTable
         return $table
             ->records(fn (?array $filters, ?string $sortColumn, ?string $sortDirection, int $page, int $recordsPerPage): DayPaginator => $this->rows($filters ?? [], $sortColumn, $sortDirection, $page, $recordsPerPage))
             ->columns([
-                self::textColumn('session', 'Session')->wrap(),
+                self::textColumn('session', 'Session'),
                 self::textColumn('first_call', 'Erster Aufruf')->sortable(),
                 self::textColumn('last_call', 'Letzter Aufruf')->sortable(),
                 self::numberColumn('calls', 'Aufrufe'),
-                self::textColumn('models', 'Modelle')->wrap(),
+                self::textColumn('models', 'Modelle'),
                 self::numberColumn('input_tokens', 'Input-Token'),
                 self::numberColumn('output_tokens', 'Output-Token'),
                 self::numberColumn('cache_read_tokens', 'Cache-Lese-Token'),

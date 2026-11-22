@@ -60,3 +60,12 @@ Ja, aber nur lesend: Zusammenzählen der vorhandenen Aufrufe auf dem Server, daz
 - **Session-Filter der Liste als Textfeld** | **Alternative:** Auswahlliste aller Session-IDs | **Abwägung:** 5.000 Einträge in einer Auswahl wären langsam und unbrauchbar; der Filter wird meist per Sprung gesetzt (2026-11-22)
 - **Index auf der Session-ID** | **Alternative:** kein Index | **Abwägung:** ohne Index muss die Liste für jede Session alle Aufrufe durchsuchen; der Index kostet nur etwas Speicher (2026-11-22)
 - **Aufrufe ohne Session-ID zählen nicht** | **Alternative:** Sammelzeile „ohne Session“ | **Abwägung:** Spec definiert Session über die gespeicherte ID; AK-24 setzt für die Übereinstimmung voraus, dass alle Aufrufe eine ID haben (2026-11-22)
+
+## Umsetzung
+- Eigene Filament-Seite `app/Filament/Pages/SessionUsage.php` unter `/admin/sessions` (Menü „Sessions“ unter „Tagesübersicht“) mit einer Filament-Tabelle auf berechneten Zeilen. Keine Aktionen, keine Formulare zum Ändern.
+- Das Zusammenzählen steckt in `app/Support/SessionUsage/SessionUsageReport.php`: eine Abfrage je Seite (gruppiert nach Session, sortiert und begrenzt in der Datenbank, bei gleichen Werten nach Session-ID), eine Abfrage für die Gesamtsumme mit Anzahl der Sessions und eine für die Modelle der angezeigten Sessions. Summen und Kostenformat stammen aus PROJ-3 (`UsageTotals`, `GermanFormat::costSum()`), der Seitenzähler `DayPaginator` wird wiederverwendet, damit „Showing … of …“ Sessions zählt und nicht die Gesamtsummen-Zeile.
+- Unbekannte Sortierwerte fallen auf „letzter Aufruf, neueste zuerst“ zurück; nur die freigegebenen Spalten gelangen in die Abfrage.
+- Liste „API-Aufrufe“: neuer Filter „Session“ (Textfeld, exakter Vergleich) mit Hinweis „Session <ID>“ zum Entfernen. Der Sprung übergibt Session, Zeitraum (leer als leerer Wert) und Modelle in der Adresse; die Liste ersetzt damit ihre gemerkten Filter.
+- Migration `add_session_index_to_api_requests_table`: Index auf Session-ID und Zeitpunkt.
+- Gemessen im Test (100.000 Aufrufe, 5.000 Sessions, 365 Tage): Filter, Seitengröße 100, Sortieren, Blättern, Neuladen und Liste mit Session-Filter jeweils deutlich unter 2 s.
+- Abweichung vom Plan: keine. Wie in PROJ-2/PROJ-3 bleiben Beschriftungen, die Filament selbst mitbringt („Filters“, „Per page“, „Showing … results“), englisch. Session-ID und Modelle brechen nicht um; bei vielen Spalten scrollt die Tabelle waagerecht wie die Liste aus PROJ-2.

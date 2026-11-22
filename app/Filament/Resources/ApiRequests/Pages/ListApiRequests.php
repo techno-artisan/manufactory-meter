@@ -15,4 +15,9 @@ class ListApiRequests extends ListRecords
     {
         return 'API-Aufrufe';
     }
+
+    public function getBreadcrumb(): string
+    {
+        return 'Liste';
+    }
 }

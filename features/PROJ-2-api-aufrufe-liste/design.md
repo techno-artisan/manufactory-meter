@@ -49,3 +49,12 @@ Ja, aber nur lesend: Abfragen der vorhandenen Tabelle über das Admin-Panel. Kei
 - **Tagesgrenzen per UTC-Bereich statt Datumsfunktion der Datenbank** | **Alternative:** Zeitpunkt in der Abfrage nach deutscher Zeit umrechnen | **Abwägung:** SQLite kennt keine Zeitzonen-Regeln; der Bereich nutzt außerdem den vorhandenen Index auf dem Zeitpunkt (2026-11-22)
 - **Filter in der Sitzung merken** | **Alternative:** nur über die Adresse | **Abwägung:** funktioniert auch, wenn der Admin über das Menü statt über „Zurück“ zur Liste kommt (2026-11-22)
 - **Index auf Modell** | **Alternative:** kein Index | **Abwägung:** kleine Migration, die nur einen Index anlegt; hält Filter-Auswahl und Modellfilter bei großen Datenmengen schnell (2026-11-22)
+
+## Umsetzung
+- Filament-Ressource `app/Filament/Resources/ApiRequests/` unter `/admin/api-aufrufe` mit nur zwei Seiten (Liste, Ansicht). Anlegen, Ändern und Löschen sind zusätzlich in der Ressource verboten.
+- Anzeigeformate gebündelt in `app/Support/GermanFormat.php` (deutsches Zahlenformat, deutsche Zeit, „–“ für fehlende Werte). Kosten in der Detailansicht werden als Text formatiert, damit keine Stelle durch Rundung verloren geht.
+- Zeitraum-Filter rechnet die deutschen Kalendertage in einen UTC-Bereich um (von Tagesbeginn „von“ bis vor Tagesbeginn nach „bis“).
+- Original-Eintrag als eigene kleine Blade-Ansicht mit `<pre>`: Filaments Code-Anzeige braucht ein Zusatzpaket (Phiki), das nicht installiert ist, und das mitgelieferte CSS hat keine Klasse für scrollbare Blöcke. Deshalb einige wenige Inline-Stile für Scrollen und Schrift (EC-6).
+- Migration legt einen Index auf Modell an. Factory `ApiRequestFactory` für Tests mit erfundenen Daten.
+- Gemessen mit 100.000 Aufrufen im Browser (lokal): Liste laden ca. 0,9 s, Umsortieren nach Kosten 0,2–0,4 s, Modell-Filter 0,2 s, Detailansicht 0,7 s.
+- Abweichung: Beschriftungen, die Filament selbst mitbringt (z. B. „Filters“, „Reset“, „Apply filters“, Seitenwahl), bleiben englisch, weil die App-Sprache `en` ist; eine Umstellung der App-Sprache verlangt die Spec nicht.

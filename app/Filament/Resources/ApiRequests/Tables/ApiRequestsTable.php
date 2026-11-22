@@ -33,7 +33,6 @@ class ApiRequestsTable
                     ->sortable(),
                 TextColumn::make('model')
                     ->label('Modell')
-                    ->wrap()
                     ->sortable(),
                 self::integerColumn('input_tokens', 'Input-Token'),
                 self::integerColumn('output_tokens', 'Output-Token'),

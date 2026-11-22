@@ -56,3 +56,13 @@ Ja, aber nur lesend: Zusammenzählen der vorhandenen Aufrufe auf dem Server. Kei
 - **Gesamtsumme als letzte Zeile jeder Seite** | **Alternative:** Kopfbereich über der Tabelle | **Abwägung:** Spec verlangt die Gesamtsumme „am Ende“ und mit denselben Spalten (2026-11-22)
 - **Tag ohne Aufrufe als eine Zeile ohne Modell** | **Alternative:** Zeile je gewähltem Modell | **Abwägung:** kompakt und eindeutig; keine Tagessumme nötig, weil alle Werte 0 sind (2026-11-22)
 - **Feste Seitengrößen nach Tagen (10 / 31 / 100)** | **Alternative:** Seitengröße nach Zeilen | **Abwägung:** nur so wird kein Tag auf zwei Seiten verteilt (2026-11-22)
+
+## Umsetzung
+- Eigene Filament-Seite `app/Filament/Pages/DailyUsage.php` unter `/admin/tagesuebersicht` mit einer Filament-Tabelle auf berechneten Zeilen. Keine Aktionen, keine Formulare zum Ändern.
+- Das Zusammenzählen steckt in `app/Support/DailyUsage/DailyUsageReport.php` (Summen je UTC-Stunde und Modell aus der Datenbank, Zuordnung zum deutschen Tag, Tage ohne Aufrufe, Tage einer Seite). `UsageTotals` hält die Summen einer Zeile, Kosten als ganze Zahl in Zehnmilliardstel-Dollar. `DayPaginator` sorgt dafür, dass „Showing 1 to 10 of 30“ Tage zählt, nicht Zeilen.
+- Anzeige der Kostensumme ohne Gleitkomma in `GermanFormat::costSum()` (Rundung auf 4 Stellen, `(n ohne Kosten)`, `–`).
+- Tage ohne Aufrufe erscheinen als eine Zeile mit Modell `–` und lauter Nullen, ohne eigene Tagessumme und ohne Link.
+- Tagessumme und Gesamtsumme sind fett. Die Gesamtsumme steht als letzte Zeile jeder Seite, Spalte „Tag“ zeigt „Gesamtsumme“.
+- Der Sprung zur Liste nutzt deren Filter in der Adresse (`filters[model][values][]`, `filters[period][from|until]`). Die Liste übernimmt diese Filter und merkt sie sich danach in ihrer Sitzung.
+- Gemessen im Browser (lokal, 100.000 Aufrufe über 365 Tage, 4 Modelle): Seite laden ca. 0,9 s, Blättern ca. 0,2 s, Option einschalten ca. 0,2 s, „von“ entfernen mit eingeschalteter Option (365 Tage) ca. 0,6 s.
+- Abweichung vom Plan: keine. Wie in PROJ-2 bleiben Beschriftungen, die Filament selbst mitbringt („Filters“, „Apply filters“, „Reset“, „Per page“, „Showing … results“), englisch, weil die App-Sprache `en` ist. Bei vielen Spalten scrollt die Tabelle waagerecht, wie die Liste aus PROJ-2.

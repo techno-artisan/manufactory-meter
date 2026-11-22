@@ -56,6 +56,27 @@ final class GermanFormat
         return ($negative ? '-' : '').$whole.($fraction !== '' ? ','.$fraction : '').' $';
     }
 
+    /**
+     * Kostensumme aus ganzzahligen Zehnmilliardstel-Dollar, auf 4 Stellen gerundet, ohne Gleitkomma.
+     *
+     * Fehlen bei allen Aufrufen die Kosten, steht `–`; fehlen sie bei einem Teil, folgt `(n ohne Kosten)`.
+     * Ohne Aufrufe sind die Kosten wirklich 0 (`0,0000 $`).
+     */
+    public static function costSum(int $costUnits, int $calls, int $callsWithoutCost): string
+    {
+        if ($calls > 0 && $callsWithoutCost >= $calls) {
+            return self::MISSING;
+        }
+
+        $negative = $costUnits < 0;
+        $tenThousandths = intdiv(abs($costUnits) + 500_000, 1_000_000);
+        $formatted = ($negative && $tenThousandths > 0 ? '-' : '')
+            .number_format(intdiv($tenThousandths, 10_000), 0, ',', '.')
+            .','.str_pad((string) ($tenThousandths % 10_000), 4, '0', STR_PAD_LEFT).' $';
+
+        return $callsWithoutCost > 0 ? $formatted.' ('.$callsWithoutCost.' ohne Kosten)' : $formatted;
+    }
+
     public static function dateTime(?DateTimeInterface $value): string
     {
         if ($value === null) {

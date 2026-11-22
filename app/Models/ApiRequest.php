@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Carbon\CarbonImmutable;
+use Database\Factories\ApiRequestFactory;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -28,6 +30,9 @@ use Illuminate\Database\Eloquent\Model;
  */
 class ApiRequest extends Model
 {
+    /** @use HasFactory<ApiRequestFactory> */
+    use HasFactory;
+
     public const UPDATED_AT = null;
 
     /**

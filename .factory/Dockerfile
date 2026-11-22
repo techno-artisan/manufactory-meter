@@ -178,6 +178,14 @@ ENV CLAUDE_CODE_ENABLE_TELEMETRY=1 \
     OTEL_LOGS_EXPORT_INTERVAL=1000 \
     OTEL_RESOURCE_ATTRIBUTES=manufactory.project=manufactory-meter
 
+# Hinweise in Commits und Pull Requests der Factory (V-009, Spec-Entscheidung vom 22.11.2026):
+# statt Co-Authored-By und „Generated with Claude Code“ ein eigener Trailer und eine eigene
+# Schlusszeile. Managed settings gehen allen anderen Einstellungen von Claude Code vor; Claude Code
+# gibt die Zeilen dem Modell als Anweisung (code.claude.com/docs/en/settings-reference, attribution).
+COPY <<'EOF' /etc/claude-code/managed-settings.json
+{"attribution": {"commit": "Manufactured-by: Software-Manufactory (Techno Artisan)", "pr": "🏭 Carefully assembled and tested at the Software-Manufactory", "sessionUrl": false}}
+EOF
+
 # Prüfung als letzter RUN-Schritt: scheitert eine Zeile, scheitert der Bau.
 # HOME=/root, damit Composer als root nichts unter /home/pwuser anlegt.
 RUN set -eux; \
@@ -195,6 +203,9 @@ RUN set -eux; \
     grep -qF -- '- **Ohne Oberfläche:**' /factory/playbook.md; \
     test -r /factory/playbook.md; \
     test "${CLAUDE_CODE_ENABLE_TELEMETRY}" = 1; \
-    test "${OTEL_EXPORTER_OTLP_ENDPOINT}" = http://172.17.0.1:4318
+    test "${OTEL_EXPORTER_OTLP_ENDPOINT}" = http://172.17.0.1:4318; \
+    jq -e '.attribution.commit == "Manufactured-by: Software-Manufactory (Techno Artisan)"' /etc/claude-code/managed-settings.json; \
+    jq -e '.attribution.pr == "🏭 Carefully assembled and tested at the Software-Manufactory"' /etc/claude-code/managed-settings.json; \
+    jq -e '.attribution.sessionUrl == false' /etc/claude-code/managed-settings.json
 
 USER pwuser

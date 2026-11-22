@@ -17,7 +17,7 @@ Geprüft mit Pest (Livewire-Tests je Kriterium) und im Browser (Chromium, angeme
 - ✅ AK-4: Modelle eines Tages alphabetisch.
 - ✅ AK-5: Tagessumme (fett) unter den Modellzeilen jedes Tages.
 - ✅ AK-6: Gesamtsumme als letzte Zeile.
-- ✅ AK-7: Blättern nach ganzen Tagen (10 / 31 / 100 Tage pro Seite); Gesamtsumme auf jeder Seite über alle passenden Tage; „Showing 11 to 20 of 30“ zählt Tage.
+- ✅ AK-7: Blättern nach ganzen Tagen (10 oder 31 Tage pro Seite); Gesamtsumme auf jeder Seite über alle passenden Tage; „Showing 11 to 20 of 30“ zählt Tage.
 - ✅ AK-8: Beim ersten Öffnen „von“ = heute − 29 Tage, „bis“ = heute; ältere Aufrufe fehlen auch in den Summen.
 - ✅ AK-9: Ein Tag, Aufrufe um 00:00:00 und 23:59:59 deutscher Zeit zählen mit.
 - ✅ AK-10: Nur „von“ gesetzt.
@@ -38,7 +38,7 @@ Geprüft mit Pest (Livewire-Tests je Kriterium) und im Browser (Chromium, angeme
 - ✅ AK-25: Leere Datenbank: „Noch keine API-Aufrufe“ mit `php artisan tokens:import`, auch mit Option.
 - ✅ AK-26: „Keine Aufrufe für diese Filter“ mit „Filter zurücksetzen“; danach wieder die letzten 30 Tage.
 - ✅ AK-27: Keine Zeilen-, Kopf- oder Sammelaktionen.
-- ✅ AK-28: Gemessen im Browser mit 100.000 Aufrufen: Laden ca. 0,9 s, Blättern ca. 0,2 s, Option ca. 0,2 s, Filter „von“ entfernen mit Option (365 Tage) ca. 0,6 s.
+- ✅ AK-28: Nachtest nach Abnahme Runde 1 (Befund B-1: Seitengröße 100 brauchte bis 5,3 s): Die Seitengröße 100 ist entfernt, angeboten werden nur noch 10 und 31 Tage; andere Werte (auch per manipulierter Anfrage) fallen auf eine angebotene Größe zurück. Im Browser mit 100.000 Aufrufen über 365 Tage und der größten Größe 31: Umschalten auf 31 ca. 0,73 s, „von“ entfernen ca. 0,77 s, neu laden (365 Tage) 1,23–1,35 s, Option einschalten ca. 1,06 s, neu laden mit Option ca. 1,22 s, Blättern ca. 1,07 s. Pest-Leistungstest mit 100.000 Aufrufen und größter Seitengröße prüft jeden Schritt auf unter 2 s.
 - ✅ AK-29: Nicht angemeldet → Weiterleitung zur Anmeldung.
 - ✅ AK-30: In `production` → 403.
 
@@ -63,7 +63,7 @@ Geprüft mit Pest (Livewire-Tests je Kriterium) und im Browser (Chromium, angeme
 - Hinweis (kein Fehler dieses Features): Werden Filterwerte über eine manipulierte Livewire-Anfrage mit falschem Typ gesendet (z. B. Zeitraum als Text statt als Feld), bricht Filament selbst beim Anzeigen der Filter ab. Das betrifft jede Filament-Tabelle im Panel, auch die Liste aus PROJ-2, und lässt sich nur durch einen angemeldeten Admin auslösen.
 
 ## Automatisierte Tests
-- `tests/Feature/DailyUsage/DailyUsagePageTest.php`: 34 Tests (je Akzeptanzkriterium, Edge Cases, Sicherheit). Gesamte Suite grün. Kein E2E-Framework im Stack; die Browserprüfung lief mit einem Playwright-Skript außerhalb des Repos.
+- `tests/Feature/DailyUsage/DailyUsagePageTest.php`: 39 Tests (je Akzeptanzkriterium, Edge Cases, Sicherheit). Dazu ein Leistungstest mit 100.000 Aufrufen und der größten angebotenen Seitengröße (AK-28) sowie Tests für die angebotenen und erzwungenen Seitengrößen. Gesamte Suite grün. Kein E2E-Framework im Stack; die Browserprüfung lief mit einem Playwright-Skript außerhalb des Repos.
 
 ## Screenshots
 Siehe Pull Request.

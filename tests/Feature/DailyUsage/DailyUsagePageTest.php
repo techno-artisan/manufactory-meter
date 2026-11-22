@@ -489,3 +489,81 @@ it('stürzt bei manipulierten Filterwerten nicht ab (Sicherheit)', function (arr
     'Modelle als Text' => [['model' => ['values' => "' or 1=1 --"]]],
     'verschachtelte Werte' => [['period' => ['from' => ['x']], 'show_empty_days' => ['isActive' => 'ja']]],
 ]);
+
+it('bietet höchstens 31 Tage pro Seite an (AK-28)', function () {
+    storeUsage('2026-11-21 10:00:00');
+
+    $table = usagePage()->instance()->getTable();
+
+    expect($table->getPaginationPageOptions())->toBe([10, 31])
+        ->and($table->getDefaultPaginationPageOption())->toBe(10);
+});
+
+it('fällt bei einer nicht angebotenen Seitengröße auf 10 Tage zurück (AK-28, Sicherheit)', function (int|string $perPage) {
+    for ($day = 1; $day <= 40; $day++) {
+        storeUsage(CarbonImmutable::parse('2026-11-22 10:00:00', 'UTC')->subDays($day - 1)->format('Y-m-d H:i:s'));
+    }
+
+    $records = usagePage(['period' => ['from' => null, 'until' => null]])
+        ->set('tableRecordsPerPage', $perPage)
+        ->assertOk()
+        ->instance()
+        ->getTableRecords();
+
+    expect($records->perPage())->toBe(10)
+        ->and($records->lastItem())->toBe(10);
+})->with([100, 'all', 5]);
+
+it('zeigt auch mit der größten Seitengröße 100.000 Aufrufe über 365 Tage in höchstens 2 Sekunden (AK-28, EC-8)', function () {
+    // Die Livewire-Testumgebung hält jede gerenderte Seite im Speicher; das betrifft nur den Test.
+    ini_set('memory_limit', '512M');
+
+    $start = CarbonImmutable::parse('2026-11-22 10:00:00', 'UTC');
+    $models = ['model-a', 'model-b', 'model-c', 'model-d'];
+    $batch = [];
+
+    for ($i = 0; $i < 100_000; $i++) {
+        $batch[] = [
+            'occurred_at' => $start->subSeconds(intdiv($i * 365 * 86_400, 100_000))->format('Y-m-d H:i:s.v'),
+            'model' => $models[$i % 4],
+            'input_tokens' => 25_000,
+            'output_tokens' => 5_000,
+            'cache_read_tokens' => 1_000_000,
+            'cache_creation_tokens' => 50_000,
+            'cost_usd' => $i % 11 === 0 ? null : '0.9000000000',
+            'duration_ms' => 100,
+            'raw' => '{}',
+            'fingerprint' => hash('sha256', (string) $i),
+            'created_at' => $start->format('Y-m-d H:i:s'),
+        ];
+
+        if (count($batch) === 2_000) {
+            DB::table('api_requests')->insert($batch);
+            $batch = [];
+        }
+    }
+
+    $page = usagePage();
+    $largest = max(DailyUsage::PAGE_SIZES);
+
+    $steps = [
+        'Seitengröße' => fn () => $page->set('tableRecordsPerPage', $largest),
+        'Filter' => fn () => $page->filterTable('period', ['from' => null, 'until' => null]),
+        'Option' => fn () => $page->filterTable('show_empty_days', true),
+        'Blättern' => fn () => $page->call('gotoPage', 2, 'page'),
+        'Neu laden' => fn () => Livewire::test(DailyUsage::class),
+    ];
+
+    foreach ($steps as $label => $step) {
+        $began = microtime(true);
+        $step();
+        $seconds = microtime(true) - $began;
+
+        expect($seconds)->toBeLessThan(2.0, "{$label} dauerte {$seconds} s");
+    }
+
+    $records = $page->instance()->getTableRecords();
+
+    expect($records->perPage())->toBe($largest)
+        ->and($records->total())->toBe(366);
+});

@@ -37,6 +37,14 @@ class DailyUsage extends Page implements HasTable
     /** Standard-Zeitraum: die letzten 30 Tage inklusive heute. */
     public const int DEFAULT_DAYS = 30;
 
+    /**
+     * Angebotene Tage pro Seite. Größere Werte (z. B. 100) überschreiten bei langen
+     * Zeiträumen die 2-Sekunden-Grenze aus AK-28, weil zu viele Zeilen gerendert werden.
+     *
+     * @var list<int>
+     */
+    public const array PAGE_SIZES = [10, 31];
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCalendarDays;
 
     protected static ?string $navigationLabel = 'Tagesübersicht';
@@ -108,7 +116,8 @@ class DailyUsage extends Page implements HasTable
                     ->toggle(),
             ])
             ->persistFiltersInSession()
-            ->paginated([10, 31, 100])
+            ->paginated(self::PAGE_SIZES)
+            ->enforcePaginationPageOptions()
             ->defaultPaginationPageOption(10)
             ->recordUrl(fn (array $record): ?string => $record['url'] ?? null)
             ->emptyStateIcon('heroicon-o-inbox')

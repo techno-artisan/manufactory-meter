@@ -18,7 +18,7 @@ Admin-Panel (/admin)
     |   +-- Zeitraum: Tag „von“, Tag „bis“ (beide optional, inklusive; Standard letzte 30 Tage)
     |   +-- Modell (Mehrfachauswahl aus den gespeicherten Modellen)
     |   +-- Schalter „Tage ohne Aufrufe zeigen“ (Standard aus)
-    +-- Seitenweise Anzeige nach ganzen Tagen (Standard 10 Tage pro Seite, umschaltbar 10 / 31 / 100)
+    +-- Seitenweise Anzeige nach ganzen Tagen (Standard 10 Tage pro Seite, umschaltbar 10 / 31)
     +-- Leer-Hinweise
         +-- keine Daten: „Noch keine API-Aufrufe“ + Hinweis auf `php artisan tokens:import`
         +-- Filter ohne Treffer: „Keine Aufrufe für diese Filter“ + „Filter zurücksetzen“
@@ -55,7 +55,8 @@ Ja, aber nur lesend: Zusammenzählen der vorhandenen Aufrufe auf dem Server. Kei
 - **Filament-Tabelle mit berechneten Zeilen** | **Alternative:** eigene Blade-Tabelle | **Abwägung:** Filter, Blättern, Sitzung und Leer-Hinweise gibt es fertig und sehen aus wie in PROJ-2; eigenes CSS ist nicht nötig (2026-11-22)
 - **Gesamtsumme als letzte Zeile jeder Seite** | **Alternative:** Kopfbereich über der Tabelle | **Abwägung:** Spec verlangt die Gesamtsumme „am Ende“ und mit denselben Spalten (2026-11-22)
 - **Tag ohne Aufrufe als eine Zeile ohne Modell** | **Alternative:** Zeile je gewähltem Modell | **Abwägung:** kompakt und eindeutig; keine Tagessumme nötig, weil alle Werte 0 sind (2026-11-22)
-- **Feste Seitengrößen nach Tagen (10 / 31 / 100)** | **Alternative:** Seitengröße nach Zeilen | **Abwägung:** nur so wird kein Tag auf zwei Seiten verteilt (2026-11-22)
+- **Feste Seitengrößen nach Tagen (10 / 31)** | **Alternative:** Seitengröße nach Zeilen | **Abwägung:** nur so wird kein Tag auf zwei Seiten verteilt (2026-11-22)
+- **Keine Seitengröße 100, angebotene Größen werden erzwungen** | **Alternative:** Darstellung von ca. 500 Zeilen beschleunigen | **Abwägung:** 100 Tage pro Seite brauchten in der Abnahme bis 5,3 s und verletzten AK-28; 31 Tage bleiben unter 1,4 s (2026-11-22)
 
 ## Umsetzung
 - Eigene Filament-Seite `app/Filament/Pages/DailyUsage.php` unter `/admin/tagesuebersicht` mit einer Filament-Tabelle auf berechneten Zeilen. Keine Aktionen, keine Formulare zum Ändern.

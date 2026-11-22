@@ -10,6 +10,7 @@ use Carbon\CarbonImmutable;
 use Filament\Actions\Action;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
@@ -67,6 +68,7 @@ class ApiRequestsTable
                         ->pluck('model', 'model')
                         ->all()),
                 self::periodFilter(),
+                self::sessionFilter(),
             ])
             ->persistFiltersInSession()
             ->persistSortInSession()
@@ -165,6 +167,35 @@ class ApiRequestsTable
 
                 return $indicators;
             });
+    }
+
+    /**
+     * Nur Aufrufe genau einer Session (PROJ-4). Wird meist per Sprung von der Seite „Sessions“ gesetzt.
+     */
+    private static function sessionFilter(): Filter
+    {
+        return Filter::make('session')
+            ->schema([
+                TextInput::make('session_id')
+                    ->label('Session')
+                    ->maxLength(255),
+            ])
+            ->query(fn (Builder $query, array $data): Builder => $query
+                ->when(self::sessionId($data), fn (Builder $query, string $sessionId): Builder => $query
+                    ->where('session_id', $sessionId)))
+            ->indicateUsing(fn (array $data): array => ($sessionId = self::sessionId($data)) !== null
+                ? [Indicator::make('Session '.$sessionId)->removeField('session_id')]
+                : []);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private static function sessionId(array $data): ?string
+    {
+        $value = $data['session_id'] ?? null;
+
+        return is_string($value) && trim($value) !== '' ? trim($value) : null;
     }
 
     /**

@@ -428,3 +428,39 @@ it('verweigert in production den Zugang zur Liste (AK-28)', function () {
 
     $this->get(ApiRequestResource::getUrl('index'))->assertForbidden();
 });
+
+it('gibt HTML aus gespeicherten Werten nicht ungefiltert aus (Sicherheit)', function () {
+    $record = storeApiRequest('2026-11-21 10:00:00', [
+        'model' => '<script>alert(1)</script>',
+        'raw' => json_encode(['attributes' => ['user.email' => '<img src=x onerror=alert(2)>']]),
+    ]);
+
+    Livewire::test(ListApiRequests::class)
+        ->assertDontSeeHtml('<script>alert(1)</script>')
+        ->assertSeeHtml('&lt;script&gt;alert(1)&lt;/script&gt;');
+
+    $this->get(ApiRequestResource::getUrl('view', ['record' => $record]))
+        ->assertOk()
+        ->assertDontSee('<script>alert(1)</script>', false)
+        ->assertDontSee('<img src=x onerror=alert(2)>', false);
+});
+
+it('stürzt bei ungültigen Datumswerten im Filter nicht ab', function () {
+    $record = storeApiRequest('2026-11-21 10:00:00');
+
+    filterPeriod(['from' => 'kein-datum', 'until' => '9999-99-99'])
+        ->assertOk()
+        ->assertCanSeeTableRecords([$record]);
+});
+
+it('ändert beim Ansehen und Filtern keine Daten (nur lesend)', function () {
+    ApiRequest::factory()->count(5)->create();
+    $before = DB::table('api_requests')->orderBy('id')->get()->toArray();
+
+    Livewire::test(ListApiRequests::class)
+        ->filterTable('model', ['claude-opus-5-5'])
+        ->sortTable('cost_usd', 'desc');
+    $this->get(ApiRequestResource::getUrl('view', ['record' => ApiRequest::firstOrFail()]))->assertOk();
+
+    expect(DB::table('api_requests')->orderBy('id')->get()->toArray())->toEqual($before);
+});

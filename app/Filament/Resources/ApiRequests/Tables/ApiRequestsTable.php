@@ -132,11 +132,13 @@ class ApiRequestsTable
                 DatePicker::make('from')
                     ->label('Von')
                     ->native(false)
-                    ->displayFormat('d.m.Y'),
+                    ->displayFormat('d.m.Y')
+                    ->closeOnDateSelection(),
                 DatePicker::make('until')
                     ->label('Bis')
                     ->native(false)
-                    ->displayFormat('d.m.Y'),
+                    ->displayFormat('d.m.Y')
+                    ->closeOnDateSelection(),
             ])
             ->query(function (Builder $query, array $data): Builder {
                 $from = self::berlinDayStart($data['from'] ?? null);
